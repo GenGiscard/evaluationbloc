@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Évaluation — Le Langage Bloc 🧩</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Caveat+Brush&display=swap" rel="stylesheet">
+<style>
+:root {
+  --board:#1a2e1a; --board-light:#243524; --board-mid:#1e2e1e;
+  --chalk:#f0ece0; --chalk-dim:rgba(240,236,224,0.65); --chalk-faint:rgba(240,236,224,0.18); --chalk-line:rgba(240,236,224,0.11);
+  --yellow:#f7d44c; --blue:#5bc8f5; --purple:#c084fc; --orange:#fb923c;
+  --green-b:#4ade80; --red:#f87171; --pink:#f472b6; --teal:#2dd4bf;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--board);color:var(--chalk);font-family:'Caveat',cursive;font-size:20px;line-height:1.5;overflow-x:hidden;min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 38px,var(--chalk-line) 38px,var(--chalk-line) 39px),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0}
+
+/* ===== SCREENS ===== */
+.screen{display:none;position:relative;z-index:1;animation:fadeIn .35s ease both}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ===== INSTIT BAR ===== */
+.instit-bar{position:relative;z-index:2;background:rgba(0,0,0,.35);border-bottom:3px solid var(--chalk-dim)}
+.instit-inner{max-width:960px;margin:0 auto;display:flex;align-items:stretch;padding:0 24px;gap:0}
+.instit-sep{width:2px;background:repeating-linear-gradient(180deg,var(--chalk-dim) 0 6px,transparent 6px 10px);margin:10px 0;flex-shrink:0}
+.instit-logo-block{display:flex;align-items:center;gap:12px;padding:12px 20px 12px 0}
+.instit-logo-svg{width:52px;height:52px;flex-shrink:0}
+.instit-school-name{font-family:'Caveat Brush',cursive;font-size:1.5rem;color:var(--chalk);letter-spacing:3px;line-height:1}
+.instit-school-sub{font-size:.85rem;color:var(--chalk-dim)}
+.instit-info-block{display:flex;flex-direction:column;justify-content:center;gap:3px;padding:12px 20px}
+.instit-label{color:var(--chalk-faint);font-size:.8rem;text-transform:uppercase;letter-spacing:1px}
+.instit-value{font-family:'Caveat Brush',cursive;font-size:1.2rem;color:var(--chalk)}
+.instit-value.yellow{color:var(--yellow)}
+.instit-right{margin-left:auto;display:flex;align-items:center;padding:12px 0 12px 20px}
+.dashboard-btn{background:rgba(247,212,76,.15);border:2px solid rgba(247,212,76,.4);color:var(--yellow);font-family:'Caveat',cursive;font-size:1rem;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .2s}
+.dashboard-btn:hover{background:rgba(247,212,76,.25);border-color:var(--yellow)}
+.chalk-rule{height:3px;background:repeating-linear-gradient(90deg,var(--chalk-dim) 0 30px,transparent 30px 44px)}
+
+/* ===== LAYOUT ===== */
+.wrap{max-width:740px;margin:0 auto;padding:40px 24px 80px}
+.wrap-wide{max-width:980px;margin:0 auto;padding:40px 24px 80px}
+
+/* ===== TYPOGRAPHY ===== */
+.chalk-title{font-family:'Caveat Brush',cursive;font-size:clamp(2rem,6vw,3.2rem);color:var(--chalk);text-shadow:2px 2px 0 rgba(0,0,0,.4);text-align:center;margin-bottom:10px}
+.chalk-sub{font-size:1.2rem;color:var(--chalk-dim);text-align:center;margin-bottom:28px}
+.section-label{font-family:'Caveat Brush',cursive;font-size:1.55rem;color:var(--yellow);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--chalk-faint)}
+
+/* ===== BOXES ===== */
+.chalk-box{background:var(--board-light);border:2px solid var(--chalk-dim);border-radius:12px;padding:20px 24px;margin-bottom:18px;position:relative}
+.chalk-box::before{content:'';position:absolute;top:5px;left:5px;right:-5px;bottom:-5px;border:2px solid var(--chalk-faint);border-radius:14px;z-index:-1}
+.info-box{background:rgba(91,200,245,.08);border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:14px 18px;margin:14px 0;font-size:1.1rem}
+.warn-box{background:rgba(251,146,60,.08);border-left:4px solid var(--orange);border-radius:0 12px 12px 0;padding:14px 18px;margin:14px 0;font-size:1.1rem}
+
+/* ===== INPUTS / BUTTONS ===== */
+.name-input{width:100%;background:rgba(0,0,0,.25);border:3px solid var(--chalk-dim);border-radius:12px;padding:14px 20px;color:var(--chalk);font-family:'Caveat',cursive;font-size:1.5rem;outline:none;transition:border-color .2s;margin-bottom:18px}
+.name-input:focus{border-color:var(--yellow)}
+.name-input::placeholder{color:var(--chalk-faint)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 30px;border-radius:10px;border:none;cursor:pointer;font-family:'Caveat Brush',cursive;font-size:1.35rem;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 rgba(0,0,0,.3)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn-yellow{background:var(--yellow);color:#1a2e1a}
+.btn-green{background:var(--green-b);color:#1a2e1a}
+.btn-red{background:var(--red);color:#fff}
+.btn-blue{background:var(--blue);color:#111}
+.btn-orange{background:var(--orange);color:#111}
+.btn-teal{background:var(--teal);color:#111}
+.btn-ghost{background:transparent;border:2px solid var(--chalk-dim);color:var(--chalk);box-shadow:none}
+.btn-ghost:hover{border-color:var(--chalk);box-shadow:none}
+.btn-sm{padding:8px 18px;font-size:1.1rem}
+.btn-full{width:100%}
+.flex-center{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+
+/* ===== PROGRESS ===== */
+.progress-wrap{margin-bottom:24px}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:1.05rem}
+.progress-track{height:10px;background:rgba(0,0,0,.3);border-radius:99px;overflow:hidden;border:2px solid var(--chalk-faint)}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--yellow),var(--orange));border-radius:99px;transition:width .5s ease}
+
+/* ===== QUESTION CARD ===== */
+.q-card{background:var(--board-light);border:2px solid var(--chalk-dim);border-radius:12px;padding:22px 26px;position:relative}
+.q-card.card-hard{border-color:var(--orange)}
+.q-card.card-veryhard{border-color:var(--red);box-shadow:0 0 20px rgba(248,113,113,.12)}
+.q-card::before{content:'';position:absolute;top:5px;left:5px;right:-5px;bottom:-5px;border:2px solid var(--chalk-faint);border-radius:14px;z-index:-1}
+.q-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.q-num-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(247,212,76,.15);border:2px solid rgba(247,212,76,.4);border-radius:8px;padding:3px 13px;font-size:1rem;color:var(--yellow)}
+.q-diff-badge{font-size:.9rem;padding:3px 11px;border-radius:8px;font-family:'Caveat Brush',cursive}
+.diff-medium{background:rgba(91,200,245,.15);border:2px solid rgba(91,200,245,.4);color:var(--blue)}
+.diff-hard{background:rgba(251,146,60,.15);border:2px solid rgba(251,146,60,.4);color:var(--orange)}
+.diff-veryhard{background:rgba(248,113,113,.15);border:2px solid rgba(248,113,113,.4);color:var(--red)}
+.q-text{font-size:1.3rem;font-weight:600;margin-bottom:16px;line-height:1.4}
+
+/* ===== SCRATCH BLOCKS (static display) ===== */
+.block-mini{display:inline-flex;align-items:center;padding:7px 14px;border-radius:5px;font-family:'Caveat Brush',cursive;font-size:1rem;color:#111;box-shadow:0 2px 0 rgba(0,0,0,.3);position:relative;transition:transform .15s,box-shadow .15s;white-space:nowrap}
+.block-mini.active-anim{box-shadow:0 0 0 3px #f7d44c,0 2px 0 rgba(0,0,0,.3) !important;transform:scale(1.04) translateX(2px)}
+.bm-hat{background:#ffab19;border-radius:18px 18px 5px 5px;padding-top:12px}
+.bm-motion{background:#4c97ff}
+.bm-looks{background:#9966ff}
+.bm-control{background:#ffab19}
+.bm-operator{background:#59c059}
+.bm-variable{background:#ff8c1a}
+.bm-sound{background:#cf63cf}
+.bm-events{background:#ffab19}
+.block-stack{display:flex;flex-direction:column;gap:3px}
+
+/* ===== OPTIONS ===== */
+.options{display:flex;flex-direction:column;gap:9px;margin-bottom:20px}
+.option{display:flex;align-items:center;gap:13px;padding:13px 17px;border-radius:10px;border:2px solid var(--chalk-faint);background:rgba(0,0,0,.13);cursor:pointer;transition:all .2s;font-size:1.15rem;user-select:none}
+.option:hover:not(.disabled){border-color:var(--blue);background:rgba(91,200,245,.08)}
+.option.selected{border-color:var(--blue);background:rgba(91,200,245,.14)}
+.option.correct{border-color:var(--green-b);background:rgba(74,222,128,.14)}
+.option.wrong{border-color:var(--red);background:rgba(248,113,113,.14)}
+.option.disabled{cursor:default}
+.option-letter{width:32px;height:32px;flex-shrink:0;border-radius:50%;border:2px solid var(--chalk-dim);display:flex;align-items:center;justify-content:center;font-family:'Caveat Brush',cursive;font-size:1.05rem;background:rgba(0,0,0,.2);transition:all .2s}
+.option.selected .option-letter{border-color:var(--blue);background:rgba(91,200,245,.2)}
+.option.correct .option-letter{border-color:var(--green-b);background:rgba(74,222,128,.2)}
+.option.wrong .option-letter{border-color:var(--red);background:rgba(248,113,113,.2)}
+
+/* ===== FEEDBACK ===== */
+.feedback{padding:12px 16px;border-radius:8px;font-size:1.1rem;margin-bottom:18px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:rgba(74,222,128,.1);border:2px solid var(--green-b);color:var(--green-b)}
+.feedback.ko{background:rgba(248,113,113,.08);border:2px solid var(--red);color:var(--chalk)}
+
+/* ===== ANIMATED QUESTION LAYOUT ===== */
+.anim-wrap{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;margin-bottom:14px}
+.anim-script{flex:1;min-width:220px}
+.anim-script-title{font-size:.9rem;color:var(--chalk-dim);margin-bottom:7px}
+.anim-blocks-list{display:flex;flex-direction:column;gap:3px;background:rgba(0,0,0,.2);border-radius:9px;padding:12px;border:2px solid var(--chalk-faint)}
+.anim-stage-col{flex-shrink:0}
+.anim-stage-title{font-size:.9rem;color:var(--chalk-dim);margin-bottom:6px}
+
+/* ===== MINI STAGE ===== */
+.mini-stage{width:190px;height:130px;position:relative;border-radius:10px;overflow:hidden;border:3px solid rgba(91,200,245,.35);flex-shrink:0;background:#1e3a5f}
+.stage-sky{position:absolute;inset:0;height:62%;background:linear-gradient(180deg,#1a3a6e,#2563a8)}
+.stage-ground{position:absolute;bottom:0;left:0;right:0;height:38%;background:linear-gradient(0deg,#2d4a0e,#3d6a18)}
+.anim-sprite{position:absolute;bottom:14px;left:10px;font-size:1.9rem;transition:left .4s ease,bottom .4s ease;z-index:2}
+.anim-bubble{position:absolute;bottom:50px;left:5px;background:white;color:#222;font-family:'Caveat',cursive;font-size:.9rem;font-weight:700;padding:3px 10px;border-radius:12px;border:2px solid #ddd;opacity:0;transition:opacity .2s;white-space:nowrap;pointer-events:none;z-index:3}
+.anim-counter{position:absolute;top:8px;right:8px;background:rgba(255,171,25,.3);border:2px solid var(--orange);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-family:'Caveat Brush',cursive;font-size:1.25rem;color:var(--orange);z-index:3}
+.anim-score{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.55);color:var(--yellow);font-family:'Caveat Brush',cursive;font-size:.82rem;padding:2px 7px;border-radius:5px;z-index:3}
+.anim-counter2{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.55);color:var(--blue);font-family:'Caveat Brush',cursive;font-size:.82rem;padding:2px 7px;border-radius:5px;z-index:3;margin-top:22px}
+.anim-lives{position:absolute;top:7px;left:7px;font-size:.9rem;z-index:3;background:rgba(0,0,0,.45);padding:2px 7px;border-radius:5px}
+.anim-bug{position:absolute;bottom:7px;right:7px;background:rgba(248,113,113,.85);color:#fff;font-size:.8rem;padding:2px 8px;border-radius:5px;font-family:'Caveat Brush',cursive;z-index:3;display:none;opacity:0;transition:opacity .4s}
+.anim-run-btn{display:block;width:100%;margin-top:7px;background:var(--teal);color:#111;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-family:'Caveat',cursive;font-size:1.1rem;font-weight:700;transition:opacity .2s}
+.anim-run-btn:disabled{opacity:.5;cursor:default}
+
+/* ===== STATIC VISUAL VARIANTS ===== */
+.color-blocks-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:14px;background:rgba(0,0,0,.2);border-radius:9px;border:2px solid var(--chalk-faint)}
+.loop-types-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:14px}
+.loop-type-card{background:rgba(0,0,0,.2);border-radius:9px;padding:13px;border:2px solid var(--chalk-faint);display:flex;flex-direction:column;gap:8px}
+.loop-type-label{font-size:.9rem;color:var(--chalk-dim);margin-top:4px}
+.sequence-arrow{font-size:1.6rem;color:var(--chalk-dim);text-align:center;animation:arrPulse 1.4s infinite ease-in-out;line-height:1}
+@keyframes arrPulse{0%,100%{opacity:.35;transform:translateY(-3px)}50%{opacity:1;transform:translateY(3px)}}
+.trace-table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.95rem}
+.trace-table th{background:rgba(247,212,76,.15);color:var(--yellow);font-family:'Caveat Brush',cursive;font-size:1rem;padding:7px 10px;border:1px solid var(--chalk-faint);text-align:center}
+.trace-table td{padding:6px 10px;border:1px solid var(--chalk-faint);text-align:center;color:var(--chalk-dim)}
+.trace-table .trace-blank{background:rgba(0,0,0,.2)}
+
+/* ===== RESULTS ===== */
+.score-circle{width:175px;height:175px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;position:relative}
+.score-circle-inner{width:135px;height:135px;border-radius:50%;background:var(--board-light);border:3px solid var(--chalk-faint);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:'Caveat Brush',cursive;font-size:3.4rem;line-height:1}
+.score-denom{font-size:1.1rem;color:var(--chalk-dim)}
+.score-mention{font-family:'Caveat Brush',cursive;font-size:1.8rem;text-align:center;margin-bottom:8px}
+.review-item{background:var(--board-light);border-radius:10px;padding:15px 18px;margin-bottom:10px;border:2px solid transparent}
+.review-item.ok{border-color:rgba(74,222,128,.35)}
+.review-item.ko{border-color:rgba(248,113,113,.35)}
+.review-q{font-weight:600;font-size:1.05rem;margin-bottom:5px}
+.review-ans{font-size:.98rem;color:var(--chalk-dim)}
+.review-expl{font-size:.92rem;color:var(--chalk-dim);margin-top:5px;padding-top:5px;border-top:1px solid var(--chalk-faint)}
+.r-ok{color:var(--green-b);font-weight:700}
+.r-ko{color:var(--red);font-weight:700}
+
+/* ===== DASHBOARD ===== */
+.pwd-wrap{max-width:420px;margin:60px auto;text-align:center}
+.pwd-input{width:100%;background:rgba(0,0,0,.25);border:3px solid var(--chalk-dim);border-radius:12px;padding:12px 20px;color:var(--chalk);font-family:'Caveat',cursive;font-size:1.4rem;outline:none;transition:border-color .2s;margin-bottom:14px;text-align:center;letter-spacing:3px}
+.pwd-input:focus{border-color:var(--yellow)}
+.pwd-error{color:var(--red);font-size:1.05rem;margin-top:8px;min-height:24px}
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:24px}
+.stat-box{background:var(--board-light);border-radius:10px;padding:14px;border:2px solid var(--chalk-faint);text-align:center}
+.stat-num{font-family:'Caveat Brush',cursive;font-size:2.3rem;color:var(--yellow)}
+.stat-label{font-size:.92rem;color:var(--chalk-dim)}
+.result-card{background:var(--board-light);border-radius:12px;padding:18px 22px;margin-bottom:12px;border:2px solid var(--chalk-faint);transition:border-color .2s}
+.result-card:hover{border-color:var(--chalk-dim)}
+.result-name{font-family:'Caveat Brush',cursive;font-size:1.45rem}
+.result-score-badge{font-family:'Caveat Brush',cursive;font-size:1.25rem;padding:4px 15px;border-radius:50px}
+.score-excellent{background:rgba(74,222,128,.18);border:2px solid var(--green-b);color:var(--green-b)}
+.score-good{background:rgba(91,200,245,.18);border:2px solid var(--blue);color:var(--blue)}
+.score-average{background:rgba(247,212,76,.18);border:2px solid var(--yellow);color:var(--yellow)}
+.score-low{background:rgba(248,113,113,.14);border:2px solid var(--red);color:var(--red)}
+.ans-chip{padding:3px 9px;border-radius:50px;font-size:.88rem;display:inline-flex;align-items:center;gap:3px}
+.ans-chip.ok{background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.38)}
+.ans-chip.ko{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.38)}
+.dash-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--chalk-faint)}
+.dash-tab{padding:9px 22px;font-family:'Caveat Brush',cursive;font-size:1.2rem;color:var(--chalk-dim);cursor:pointer;transition:color .2s;border-bottom:3px solid transparent;margin-bottom:-2px}
+.dash-tab.active{color:var(--yellow);border-bottom-color:var(--yellow)}
+.tab-content{display:none}
+.tab-content.active{display:block;animation:fadeIn .3s ease}
+.empty-dash{text-align:center;padding:60px 20px;color:var(--chalk-dim);font-size:1.2rem}
+
+/* ===== CONFETTI ===== */
+@keyframes cfetti{0%{transform:translateY(-15px) rotate(0);opacity:1}100%{transform:translateY(80px) rotate(360deg);opacity:0}}
+.cfetti-p{position:absolute;width:9px;height:9px;border-radius:2px;animation:cfetti .9s ease forwards;pointer-events:none}
+
+/* ===== MISC ===== */
+.emoji-big{font-size:3.5rem;display:block;text-align:center;margin-bottom:12px;animation:bounce 2s infinite ease-in-out}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.mt-8{margin-top:8px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}
+@media(max-width:520px){.instit-info-block{display:none}.anim-wrap{flex-direction:column}.mini-stage{width:100%;height:120px}}
+</style>
+</head>
+<body>
+
+<!-- ===== INSTIT BAR ===== -->
+<div class="instit-bar">
+  <div class="instit-inner">
+    <div class="instit-logo-block">
+      <svg class="instit-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="47" fill="none" stroke="rgba(240,236,224,.6)" stroke-width="2"/>
+        <circle cx="50" cy="50" r="46" fill="rgba(0,0,0,.3)"/>
+        <rect x="47" y="14" width="6" height="36" rx="3" fill="rgba(240,236,224,.85)"/>
+        <rect x="34" y="24" width="32" height="6" rx="3" fill="rgba(240,236,224,.85)"/>
+        <path id="a2" d="M 18,50 A 32,32 0 0,1 82,50" fill="none"/>
+        <text font-family="'Caveat Brush',cursive" font-size="11" fill="rgba(240,236,224,.9)" letter-spacing="3"><textPath href="#a2" startOffset="12%">ESTIC</textPath></text>
+      </svg>
+      <div><div class="instit-school-name">ESTIC</div><div class="instit-school-sub">Collège Don Bosco · Saint-Dizier</div></div>
+    </div>
+    <div class="instit-sep"></div>
+    <div class="instit-info-block">
+      <div style="display:flex;align-items:center;gap:8px"><span class="instit-label">Prof.</span><span class="instit-value">Agostini</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span class="instit-label">Matière</span><span class="instit-value yellow">Technologie</span></div>
+    </div>
+    <div class="instit-sep"></div>
+    <div class="instit-right">
+      <button class="dashboard-btn" onclick="showDashboard()">👨‍🏫 Tableau de bord</button>
+    </div>
+  </div>
+</div>
+<div class="chalk-rule"></div>
+
+<!-- ================================================ SCREEN WELCOME ================================================ -->
+<div class="screen active" id="screen-welcome">
+  <div class="wrap" style="max-width:600px">
+    <span class="emoji-big">🧩</span>
+    <h1 class="chalk-title">Évaluation<br>Le Langage Bloc</h1>
+    <p class="chalk-sub">Technologie · Cycle 4 · M. Agostini</p>
+    <div class="chalk-box">
+      <div style="font-family:'Caveat Brush',cursive;font-size:1.3rem;color:var(--yellow);margin-bottom:10px">📋 Consignes</div>
+      <ul style="padding-left:20px;font-size:1.1rem;display:flex;flex-direction:column;gap:5px">
+        <li><strong>12 questions</strong> au total — certaines avec des animations !</li>
+        <li>Note sur <strong>20 points</strong> calculée automatiquement</li>
+        <li>Une seule bonne réponse par question</li>
+        <li>Les 2 dernières questions sont des <span style="color:var(--red)">défis experts ⚡</span></li>
+        <li>Clique sur <strong>▶️ Lancer</strong> pour voir les animations</li>
+      </ul>
+    </div>
+    <div class="info-box">💡 Saisis ton <strong>prénom et nom</strong> ci-dessous — tes résultats seront envoyés à M. Agostini.</div>
+    <input class="name-input" id="studentName" type="text" placeholder="Ex : Marie Dupont" maxlength="60">
+    <div id="name-error" style="color:var(--red);font-size:1.05rem;margin-bottom:12px;min-height:20px"></div>
+    <div class="flex-center"><button class="btn btn-yellow" onclick="startQuiz()">🚀 Commencer l'évaluation</button></div>
+  </div>
+</div>
+
+<!-- ================================================ SCREEN QUIZ ================================================ -->
+<div class="screen" id="screen-quiz">
+  <div class="wrap">
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span id="q-counter" style="color:var(--chalk-dim)">Question 1 / 12</span>
+        <span id="q-score-live" style="color:var(--yellow);font-family:'Caveat Brush',cursive;font-size:1.2rem">0 pt</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:8%"></div></div>
+    </div>
+    <div id="q-card" class="q-card">
+      <div class="q-header">
+        <div class="q-num-badge" id="q-num-badge">❓ Question 1</div>
+        <div class="q-diff-badge" id="q-diff-badge" style="display:none"></div>
+      </div>
+      <div class="q-text" id="q-text"></div>
+      <div id="q-visual"></div>
+      <div class="options" id="q-options"></div>
+      <div class="feedback" id="q-feedback"></div>
+    </div>
+    <div class="flex-center mt-16">
+      <button class="btn btn-yellow" id="btn-next" onclick="nextQuestion()" style="display:none">Question suivante →</button>
+      <button class="btn btn-green" id="btn-finish" onclick="finishQuiz()" style="display:none">✅ Terminer l'évaluation</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================ SCREEN RESULTS ================================================ -->
+<div class="screen" id="screen-results">
+  <div class="wrap">
+    <div style="position:relative;text-align:center;margin-bottom:8px" id="score-circle-wrap">
+      <div class="score-circle" id="score-circle">
+        <div class="score-circle-inner">
+          <div class="score-num" id="result-score">0</div>
+          <div class="score-denom">/ 20</div>
+        </div>
+      </div>
+    </div>
+    <div class="score-mention" id="result-mention"></div>
+    <p class="chalk-sub" id="result-name-display"></p>
+    <div class="chalk-box mb-16 center" id="result-msg" style="font-size:1.1rem;line-height:1.5"></div>
+    <div class="section-label">📝 Correction détaillée</div>
+    <div id="review-list"></div>
+    <div class="flex-center mt-24">
+      <button class="btn btn-ghost" onclick="resetQuiz()">🔄 Autre élève</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================ SCREEN DASHBOARD PWD ================================================ -->
+<div class="screen" id="screen-dashboard-pwd">
+  <div class="wrap">
+    <div class="pwd-wrap">
+      <span style="font-size:3rem;display:block;text-align:center;margin-bottom:12px">🔐</span>
+      <h2 class="chalk-title" style="font-size:2rem;margin-bottom:6px">Tableau de bord</h2>
+      <p class="chalk-sub" style="margin-bottom:22px">Accès réservé à M. Agostini</p>
+      <input class="pwd-input" id="pwd-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPwd()">
+      <button class="btn btn-yellow btn-full" onclick="checkPwd()">🔓 Accéder</button>
+      <div class="pwd-error" id="pwd-error"></div>
+      <div class="mt-16"><button class="btn btn-ghost btn-sm" onclick="goBack()">← Retour</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================ SCREEN DASHBOARD ================================================ -->
+<div class="screen" id="screen-dashboard">
+  <div class="wrap-wide">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+      <h2 class="chalk-title" style="text-align:left;margin-bottom:0">📊 Tableau de bord</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-blue btn-sm" onclick="loadDashboard()">🔄 Actualiser</button>
+        <button class="btn btn-orange btn-sm" onclick="exportCSV()">⬇️ CSV</button>
+        <button class="btn btn-red btn-sm" onclick="clearAll()">🗑️ Effacer</button>
+        <button class="btn btn-ghost btn-sm" onclick="goBack()">← Quitter</button>
+      </div>
+    </div>
+    <div class="stats-bar" id="dash-stats"></div>
+    <div class="dash-tabs">
+      <div class="dash-tab active" onclick="switchTab('results')">📋 Résultats</div>
+      <div class="dash-tab" onclick="switchTab('questions')">📈 Par question</div>
+    </div>
+    <div class="tab-content active" id="tab-results"><div id="dash-results-list"></div></div>
+    <div class="tab-content" id="tab-questions"><div id="dash-questions-list"></div></div>
+  </div>
+</div>
+
+<script>
+// ================================================
+// HELPERS
+// ================================================
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+let animRunning = false;
+
+// ================================================
+// 12 QUESTIONS
+// ================================================
+const QUESTIONS = [
+
+  // ─── Q1 ── FACILE ── static blocks ───────────────────────────────────
+  {
+    difficulty:'easy',
+    text:"Quel est le rôle d'un bloc 'chapeau' (arrondi en haut) dans un programme Scratch ?",
+    visual:'blocks',
+    visualBlocks:[
+      {cls:'bm-hat',text:'🚩 Quand drapeau cliqué',hl:true},
+      {cls:'bm-motion',text:'👉 Avancer de 10 pas'},
+      {cls:'bm-looks',text:'💬 Dire "Bonjour !"'},
+    ],
+    options:["Il répète des instructions plusieurs fois","Il déclenche le programme — c'est le signal de départ","Il effectue un calcul mathématique","Il change le costume du sprite"],
+    correct:1,
+    explanation:"Le bloc chapeau (bord arrondi en haut) est toujours en tête d'un script. Sans lui, le programme ne démarre jamais : c'est le signal de départ !"
+  },
+
+  // ─── Q2 ── FACILE ── color blocks ────────────────────────────────────
+  {
+    difficulty:'easy',
+    text:"Dans Scratch, parmi ces quatre blocs, lequel appartient à la catégorie 'Contrôle' ?",
+    visual:'colorblocks',
+    options:[
+      "Le bloc bleu (Avancer de 10 pas)",
+      "Le bloc violet (Dire 'Bravo !')",
+      "Le bloc orange/jaune (Répéter 10 fois)",
+      "Le bloc vert (3 + 4)"
+    ],
+    correct:2,
+    explanation:"Les blocs Contrôle sont orange/jaune (#ffab19). Bleu = Mouvement, Violet = Apparence, Vert = Opérateurs. La couleur d'un bloc indique toujours sa catégorie !"
+  },
+
+  // ─── Q3 ── FACILE ── sequence ─────────────────────────────────────────
+  {
+    difficulty:'easy',
+    text:"Marie veut que son chat se déplace PUIS parle. Quel programme respecte cet ordre ?",
+    visual:'sequence',
+    options:[
+      "Dire 'Bonjour !' → Avancer de 50 pas",
+      "Avancer de 50 pas → Dire 'Bonjour !'",
+      "Les deux s'exécutent en même temps",
+      "L'ordre n'a aucune importance"
+    ],
+    correct:1,
+    explanation:"La séquence s'exécute DE HAUT EN BAS : il faut mettre 'Avancer' en premier, puis 'Dire'. Inverser les blocs changerait complètement le résultat !"
+  },
+
+  // ─── Q4 ── MOYEN ── ANIMATED: sequence calc ───────────────────────────
+  {
+    difficulty:'medium',
+    text:"Le chat exécute ce programme. De combien de pas avance-t-il au total ? Clique ▶️ !",
+    visual:'animated',
+    animBlocks:[
+      {cls:'bm-hat',  text:'🚩 Quand drapeau cliqué'},
+      {cls:'bm-motion',text:'👉 Avancer de 20 pas'},
+      {cls:'bm-motion',text:'👉 Avancer de 20 pas'},
+      {cls:'bm-motion',text:'👉 Avancer de 20 pas'},
+    ],
+    stageExtras:'',
+    animate: async(stage,bEls)=>{
+      const sp=stage.querySelector('.anim-sprite');
+      sp.style.left='8px';
+      await sleep(300);
+      for(let i=1;i<=3;i++){
+        if(bEls[i])bEls[i].classList.add('active-anim');
+        sp.style.left=(8+i*50)+'px';
+        await sleep(650);
+        if(bEls[i])bEls[i].classList.remove('active-anim');
+        await sleep(100);
+      }
+    },
+    options:["20 pas","40 pas","60 pas","80 pas"],
+    correct:2,
+    explanation:"3 blocs 'Avancer de 20 pas' s'exécutent en séquence : 20 + 20 + 20 = 60 pas au total ! Chaque bloc s'ajoute au précédent."
+  },
+
+  // ─── Q5 ── MOYEN ── ANIMATED: loop count ─────────────────────────────
+  {
+    difficulty:'medium',
+    text:"Le chat dit 'Salut !' à chaque tour de boucle. Combien de fois en tout ? Clique ▶️ !",
+    visual:'animated',
+    animBlocks:[
+      {cls:'bm-hat',   text:'🚩 Quand drapeau cliqué'},
+      {cls:'bm-control',text:'🔄 Répéter 5 fois'},
+      {cls:'bm-looks',  text:'💬 Dire "Salut !" (0.4s)',indent:true},
+    ],
+    stageExtras:'<div class="anim-counter">0</div>',
+    animate: async(stage,bEls)=>{
+      const bub=stage.querySelector('.anim-bubble');
+      const ctr=stage.querySelector('.anim-counter');
+      for(let i=1;i<=5;i++){
+        if(bEls[1])bEls[1].classList.add('active-anim');
+        if(bEls[2])bEls[2].classList.add('active-anim');
+        if(ctr)ctr.textContent=i;
+        bub.textContent='Salut !';bub.style.opacity='1';
+        await sleep(550);
+        bub.style.opacity='0';
+        if(bEls[1])bEls[1].classList.remove('active-anim');
+        if(bEls[2])bEls[2].classList.remove('active-anim');
+        await sleep(180);
+      }
+    },
+    options:["1 fois","3 fois","4 fois","5 fois"],
+    correct:3,
+    explanation:"La boucle 'Répéter 5 fois' exécute le bloc 'Dire' exactement 5 fois. Le compteur en haut à droite de la scène le montre !"
+  },
+
+  // ─── Q6 ── MOYEN ── ANIMATED: condition ──────────────────────────────
+  {
+    difficulty:'medium',
+    text:"Le score du chat vaut 4. La condition vérifie si score > 5. Que dit le chat ? Clique ▶️ !",
+    visual:'animated',
+    animBlocks:[
+      {cls:'bm-hat',    text:'🚩 Quand drapeau cliqué'},
+      {cls:'bm-variable',text:'📦 score = 4'},
+      {cls:'bm-control', text:'❓ Si score > 5 alors'},
+      {cls:'bm-looks',   text:'💬 Dire "Super !"',indent:true},
+      {cls:'bm-control', text:'sinon'},
+      {cls:'bm-looks',   text:'💬 Dire "Continue !"',indent:true},
+    ],
+    stageExtras:'<div class="anim-score">score: 4</div>',
+    animate: async(stage,bEls)=>{
+      const bub=stage.querySelector('.anim-bubble');
+      if(bEls[2]){bEls[2].classList.add('active-anim');await sleep(700);bEls[2].classList.remove('active-anim');}
+      // 4>5 = FALSE → sinon
+      if(bEls[4]){bEls[4].classList.add('active-anim');await sleep(350);bEls[4].classList.remove('active-anim');}
+      if(bEls[5])bEls[5].classList.add('active-anim');
+      bub.textContent='Continue !';bub.style.opacity='1';bub.style.color='#f87171';
+      await sleep(1600);
+      bub.style.opacity='0';bub.style.color='';
+      if(bEls[5])bEls[5].classList.remove('active-anim');
+    },
+    options:['"Super !"','"Continue !"','Les deux messages à la suite','Rien du tout'],
+    correct:1,
+    explanation:"score=4, et 4 > 5 est FAUX → le programme prend la branche 'sinon' → 'Continue !'. Un seul chemin est emprunté dans un Si/Sinon !"
+  },
+
+  // ─── Q7 ── MOYEN ── loop types ────────────────────────────────────────
+  {
+    difficulty:'medium',
+    text:"Dans un jeu, un personnage doit sans cesse vérifier si le joueur appuie sur une touche. Quelle boucle utiliser ?",
+    visual:'looptypes',
+    options:[
+      "Répéter 10 fois — on sait combien de fois à l'avance",
+      "Répéter indéfiniment — la boucle ne s'arrête jamais seule",
+      "Répéter jusqu'à (touche pressée) — elle s'arrête sur condition",
+      "Si / Sinon — ce n'est pas une boucle"
+    ],
+    correct:1,
+    explanation:"'Répéter indéfiniment' est la boucle principale des jeux : elle tourne sans fin pour vérifier les entrées du joueur, mettre à jour l'affichage, etc."
+  },
+
+  // ─── Q8 ── MOYEN ── ANIMATED: debug ──────────────────────────────────
+  {
+    difficulty:'medium',
+    text:"Le programme devrait faire avancer le chat de 50 pas, mais il y a un 🐛 bug ! Regarde l'animation — lequel ?",
+    visual:'animated',
+    animBlocks:[
+      {cls:'bm-hat',    text:'🚩 Quand drapeau cliqué'},
+      {cls:'bm-control', text:'🔄 Répéter 5 fois'},
+      {cls:'bm-motion',  text:'👉 Avancer de 5 pas',indent:true},
+    ],
+    stageExtras:'<div class="anim-bug">🐛 Seulement 25 pas !</div>',
+    animate: async(stage,bEls)=>{
+      const sp=stage.querySelector('.anim-sprite');
+      const bugEl=stage.querySelector('.anim-bug');
+      sp.style.left='8px';
+      await sleep(300);
+      for(let i=1;i<=5;i++){
+        if(bEls[1])bEls[1].classList.add('active-anim');
+        if(bEls[2])bEls[2].classList.add('active-anim');
+        sp.style.left=(8+i*14)+'px'; // only reaches ~78px → halfway
+        await sleep(480);
+        if(bEls[1])bEls[1].classList.remove('active-anim');
+        if(bEls[2])bEls[2].classList.remove('active-anim');
+        await sleep(100);
+      }
+      // Show bug indicator
+      if(bugEl){bugEl.style.display='block';await sleep(50);bugEl.style.opacity='1';}
+    },
+    options:[
+      "Le bloc chapeau est incorrect",
+      "La boucle répète trop peu de fois (mettre 10 fois)",
+      "Le nombre de pas devrait être 10, pas 5",
+      "Il manque un bloc 'Avancer' supplémentaire"
+    ],
+    correct:2,
+    explanation:"5 répétitions × 5 pas = 25 pas (pas 50). La correction : mettre 'Avancer de 10 pas' (5×10=50). On pourrait aussi mettre 'Répéter 10 fois' × 5 pas !"
+  },
+
+  // ─── Q9 ── DIFFICILE ── ANIMATED: nested loop ─────────────────────────
+  {
+    difficulty:'hard',
+    text:"Boucles imbriquées ! Combien de fois le chat dit-il 'Hop !' au total ? Trace mentalement chaque tour. Clique ▶️ !",
+    visual:'animated',
+    animBlocks:[
+      {cls:'bm-hat',    text:'🚩 Quand drapeau cliqué'},
+      {cls:'bm-control', text:'🔄 Répéter 3 fois'},
+      {cls:'bm-control', text:'🔄 Répéter 2 fois',indent:true},
+      {cls:'bm-looks',   text:'💬 Dire "Hop !" (0.3s)',indent2:true},
+    ],
+    stageExtras:'<div class="anim-counter">0</div>',
+    animate: async(stage,bEls)=>{
+      const bub=stage.querySelector('.anim-bubble');
+      const ctr=stage.querySelector('.anim-counter');
+      let total=0;
+      for(let i=0;i<3;i++){
+        if(bEls[1])bEls[1].classList.add('active-anim');
+        await sleep(200);
+        for(let j=0;j<2;j++){
+          if(bEls[2])bEls[2].classList.add('active-anim');
+          if(bEls[3])bEls[3].classList.add('active-anim');
+          total++;
+          if(ctr)ctr.textContent=total;
+          bub.textContent='Hop !';bub.style.opacity='1';
+          await sleep(480);
+          bub.style.opacity='0';
+          if(bEls[2])bEls[2].classList.remove('active-anim');
+          if(bEls[3])bEls[3].classList.remove('active-anim');
+          await sleep(130);
+        }
+        if(bEls[1])bEls[1].classList.remove('active-anim');
+        await sleep(150);
+      }
+    },
+    options:["2 fois","3 fois","5 fois","6 fois"],
+    correct:3,
+    explanation:"Boucle externe (3 tours) × boucle interne (2 tours) = 3 × 2 = 6 fois ! Avec les boucles imbriquées, on MULTIPLIE les répétitions."
+  },
+
+  // ─── Q10 ── DIFFICILE ── ANIMATED: loop + condition ───────────────────
+  {
+    difficulty:'hard',
+    text:"Score démarre à 0. La boucle ajoute 4 à chaque tour. Après la boucle, que dit le chat ? Clique ▶️ !",
+    visual:'animated',
+    animBlocks:[
+      {cls:'bm-hat',    text:'🚩 Quand drapeau cliqué'},
+      {cls:'bm-variable',text:'📦 Mettre score à 0'},
+      {cls:'bm-control', text:'🔄 Répéter 3 fois'},
+      {cls:'bm-variable',text:'📦 Ajouter 4 à score',indent:true},
+      {cls:'bm-control', text:'❓ Si score > 10 alors'},
+      {cls:'bm-looks',   text:'💬 Dire "Victoire !"',indent:true},
+      {cls:'bm-control', text:'sinon'},
+      {cls:'bm-looks',   text:'💬 Dire "Encore !"',indent:true},
+    ],
+    stageExtras:'<div class="anim-score">score: 0</div>',
+    animate: async(stage,bEls)=>{
+      const bub=stage.querySelector('.anim-bubble');
+      const sd=stage.querySelector('.anim-score');
+      let score=0;
+      for(let i=0;i<3;i++){
+        if(bEls[2])bEls[2].classList.add('active-anim');
+        await sleep(200);
+        if(bEls[3])bEls[3].classList.add('active-anim');
+        score+=4;
+        if(sd)sd.textContent='score: '+score;
+        await sleep(550);
+        if(bEls[3])bEls[3].classList.remove('active-anim');
+        if(bEls[2])bEls[2].classList.remove('active-anim');
+        await sleep(180);
+      }
+      // After loop: score=12, test Si score>10
+      if(bEls[4]){bEls[4].classList.add('active-anim');await sleep(550);bEls[4].classList.remove('active-anim');}
+      if(bEls[5])bEls[5].classList.add('active-anim');
+      bub.textContent='Victoire !';bub.style.opacity='1';bub.style.color='#4ade80';
+      await sleep(1600);
+      bub.style.opacity='0';bub.style.color='';
+      if(bEls[5])bEls[5].classList.remove('active-anim');
+    },
+    options:[
+      '"Encore !" — car score = 4 après 1 tour',
+      '"Encore !" — car score = 8 après 3 tours',
+      '"Victoire !" — car score = 12 > 10 après 3 tours',
+      'Le chat ne dit rien — la condition est dans la boucle'
+    ],
+    correct:2,
+    explanation:"La boucle : 0+4=4, +4=8, +4=12. Ensuite la condition (hors boucle) : 12>10 → VRAI → 'Victoire !'. Attention : la condition s'évalue UNE FOIS après la boucle, pas à chaque tour !"
+  },
+
+  // ─── Q11 ── TRÈS DIFFICILE ── ANIMATED: variable trace ───────────────
+  {
+    difficulty:'veryhard',
+    text:"⚡ DÉFI EXPERT ! Trace l'exécution. Quelle valeur finale de 'score' le chat affiche-t-il ? (Clique ▶️ pour vérifier ta réponse !)",
+    visual:'animated',
+    animBlocks:[
+      {cls:'bm-hat',    text:'🚩 Quand drapeau cliqué'},
+      {cls:'bm-variable',text:'📦 score = 0 · compteur = 0'},
+      {cls:'bm-control', text:'🔄 Répéter 4 fois'},
+      {cls:'bm-variable',text:'📦 Ajouter 1 à compteur',indent:true},
+      {cls:'bm-control', text:'❓ Si compteur = 2 alors',indent:true},
+      {cls:'bm-variable',text:'📦 Ajouter 10 à score',indent2:true},
+      {cls:'bm-control', text:'sinon',indent:true},
+      {cls:'bm-variable',text:'📦 Ajouter 1 à score',indent2:true},
+      {cls:'bm-looks',   text:'💬 Dire score'},
+    ],
+    stageExtras:'<div class="anim-score" style="top:7px;left:7px">score: 0</div><div class="anim-counter2" style="top:32px;left:7px">cpt: 0</div>',
+    animate: async(stage,bEls)=>{
+      const bub=stage.querySelector('.anim-bubble');
+      const sd=stage.querySelector('.anim-score');
+      const c2=stage.querySelector('.anim-counter2');
+      let score=0,cpt=0;
+      for(let i=0;i<4;i++){
+        if(bEls[2])bEls[2].classList.add('active-anim');
+        await sleep(150);
+        if(bEls[3]){bEls[3].classList.add('active-anim');cpt++;if(c2)c2.textContent='cpt: '+cpt;await sleep(350);bEls[3].classList.remove('active-anim');}
+        if(bEls[4]){bEls[4].classList.add('active-anim');await sleep(350);bEls[4].classList.remove('active-anim');}
+        if(cpt===2){
+          if(bEls[5]){bEls[5].classList.add('active-anim');score+=10;if(sd)sd.textContent='score: '+score;await sleep(450);bEls[5].classList.remove('active-anim');}
+        } else {
+          if(bEls[7]){bEls[7].classList.add('active-anim');score+=1;if(sd)sd.textContent='score: '+score;await sleep(450);bEls[7].classList.remove('active-anim');}
+        }
+        if(bEls[2])bEls[2].classList.remove('active-anim');
+        await sleep(180);
+      }
+      if(bEls[8])bEls[8].classList.add('active-anim');
+      bub.textContent=String(score);bub.style.opacity='1';bub.style.color='#f7d44c';bub.style.fontSize='1.1rem';
+      await sleep(2200);
+      bub.style.opacity='0';bub.style.color='';bub.style.fontSize='';
+      if(bEls[8])bEls[8].classList.remove('active-anim');
+    },
+    options:["score = 10","score = 11","score = 13","score = 14"],
+    correct:2,
+    explanation:"Trace complète — Tour 1 (cpt=1≠2 → score+1=1) · Tour 2 (cpt=2=2 → score+10=11) · Tour 3 (cpt=3≠2 → score+1=12) · Tour 4 (cpt=4≠2 → score+1=13) → 'Dire 13' !"
+  },
+
+  // ─── Q12 ── TRÈS DIFFICILE ── ANIMATED: repeat-until + condition ─────
+  {
+    difficulty:'veryhard',
+    text:"⚡ DÉFI EXPERT ! vies=3, score=5. La boucle tourne jusqu'à (vies=0). Combien de fois le chat dit-il quelque chose en tout ? Clique ▶️ !",
+    visual:'animated',
+    animBlocks:[
+      {cls:'bm-hat',    text:'🚩 Quand drapeau cliqué'},
+      {cls:'bm-variable',text:'📦 vies=3 · score=5'},
+      {cls:'bm-control', text:"🔄 Répéter jusqu'à (vies=0)"},
+      {cls:'bm-control', text:'❓ Si score > 10 alors',indent:true},
+      {cls:'bm-looks',   text:'💬 Dire "Bravo !"',indent2:true},
+      {cls:'bm-control', text:'🛑 Arrêter tout',indent2:true},
+      {cls:'bm-control', text:'sinon',indent:true},
+      {cls:'bm-variable',text:'📦 Enlever 1 à vies',indent2:true},
+      {cls:'bm-looks',   text:'💬 Dire "Game Over !"'},
+    ],
+    stageExtras:'<div class="anim-lives">❤️❤️❤️</div><div class="anim-score" style="top:32px;left:7px">score: 5</div>',
+    animate: async(stage,bEls)=>{
+      const bub=stage.querySelector('.anim-bubble');
+      const lv=stage.querySelector('.anim-lives');
+      let vies=3;
+      while(vies>0){
+        if(bEls[2])bEls[2].classList.add('active-anim');
+        await sleep(280);
+        if(bEls[3]){bEls[3].classList.add('active-anim');await sleep(380);bEls[3].classList.remove('active-anim');}
+        // score=5, not >10 → sinon
+        if(bEls[6]){bEls[6].classList.add('active-anim');await sleep(220);bEls[6].classList.remove('active-anim');}
+        if(bEls[7])bEls[7].classList.add('active-anim');
+        vies--;
+        if(lv)lv.textContent='❤️'.repeat(vies)||(vies===0?'💀':'');
+        await sleep(480);
+        if(bEls[7])bEls[7].classList.remove('active-anim');
+        if(bEls[2])bEls[2].classList.remove('active-anim');
+        await sleep(200);
+      }
+      // vies=0 → loop ends → Dire "Game Over !"
+      if(bEls[8])bEls[8].classList.add('active-anim');
+      bub.textContent='Game Over !';bub.style.opacity='1';bub.style.color='#f87171';
+      await sleep(1800);
+      bub.style.opacity='0';bub.style.color='';
+      if(bEls[8])bEls[8].classList.remove('active-anim');
+    },
+    options:[
+      "0 fois — il n'y a aucun bloc 'Dire' exécuté",
+      "1 fois — uniquement 'Game Over !' après la boucle",
+      "3 fois — 'Game Over !' à chaque tour de boucle",
+      "4 fois — 3 fois dans la boucle + 1 fois après"
+    ],
+    correct:1,
+    explanation:"score=5 ne dépasse jamais 10 → jamais 'Bravo !'. La boucle enlève 1 vie par tour (3→2→1→0) sans rien afficher. Quand vies=0, la boucle se termine et 'Game Over !' s'affiche → 1 seule fois !"
+  },
+];
+
+// ================================================
+// STATE
+// ================================================
+let currentQ=0, scores=[], studentAnswers=[], studentName='';
+const TOTAL=QUESTIONS.length;
+const DASHBOARD_PASSWORD='Agostini2025';
+
+// ================================================
+// NAVIGATION
+// ================================================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function goBack(){ showScreen('screen-welcome'); }
+
+// ================================================
+// QUIZ INIT
+// ================================================
+function startQuiz(){
+  const inp=document.getElementById('studentName');
+  const err=document.getElementById('name-error');
+  const name=inp.value.trim();
+  if(name.length<3){err.textContent='⚠️ Saisis ton prénom et ton nom (min. 3 caractères).';inp.focus();return;}
+  err.textContent='';
+  studentName=name; currentQ=0; scores=[]; studentAnswers=[];
+  renderQuestion();
+  showScreen('screen-quiz');
+}
+
+// ================================================
+// QUESTION RENDERING
+// ================================================
+function renderQuestion(){
+  animRunning=false;
+  const q=QUESTIONS[currentQ];
+  const pct=Math.round((currentQ+1)/TOTAL*100);
+
+  document.getElementById('q-counter').textContent=`Question ${currentQ+1} / ${TOTAL}`;
+  document.getElementById('q-score-live').textContent=(scores.filter(Boolean).length)+'/'+(currentQ)+' juste'+(currentQ>1?'s':'');
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('q-num-badge').textContent=`❓ Question ${currentQ+1}`;
+
+  // Difficulty badge
+  const diffBadge=document.getElementById('q-diff-badge');
+  const diffMap={easy:null,medium:{cls:'diff-medium',txt:'🔵 Moyen'},hard:{cls:'diff-hard',txt:'🟠 Difficile'},veryhard:{cls:'diff-veryhard',txt:'🔴 Expert ⚡'}};
+  const dInfo=diffMap[q.difficulty];
+  if(dInfo){diffBadge.style.display='';diffBadge.className='q-diff-badge '+dInfo.cls;diffBadge.textContent=dInfo.txt;}
+  else{diffBadge.style.display='none';}
+
+  // Card border style
+  const card=document.getElementById('q-card');
+  card.className='q-card'+(q.difficulty==='hard'?' card-hard':q.difficulty==='veryhard'?' card-veryhard':'');
+
+  document.getElementById('q-text').textContent=q.text;
+
+  // Visual
+  const vis=document.getElementById('q-visual');
+  vis.innerHTML='';
+  if(q.visual==='blocks') vis.innerHTML=buildBlocksVisual(q);
+  else if(q.visual==='colorblocks') vis.innerHTML=buildColorBlocksVisual();
+  else if(q.visual==='sequence') vis.innerHTML=buildSequenceVisual();
+  else if(q.visual==='looptypes') vis.innerHTML=buildLoopTypesVisual();
+  else if(q.visual==='animated') vis.innerHTML=buildAnimatedVisual(q);
+
+  // Options
+  const letters=['A','B','C','D'];
+  document.getElementById('q-options').innerHTML=q.options.map((opt,i)=>
+    `<div class="option" id="opt-${i}" onclick="selectAnswer(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <span>${opt}</span>
+    </div>`
+  ).join('');
+
+  document.getElementById('q-feedback').className='feedback';
+  document.getElementById('q-feedback').innerHTML='';
+  document.getElementById('btn-next').style.display='none';
+  document.getElementById('btn-finish').style.display='none';
+}
+
+// ── VISUAL BUILDERS ──────────────────────────────
+function buildBlocksVisual(q){
+  const blocks=q.visualBlocks||[];
+  return `<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:14px;padding:14px;background:rgba(0,0,0,.2);border-radius:9px;border:2px solid var(--chalk-faint)">
+    ${blocks.map(b=>`<div class="block-mini ${b.cls}" style="${b.hl?'box-shadow:0 0 0 3px #f7d44c,0 2px 0 rgba(0,0,0,.3)':''}">
+      ${b.hl?'<span style="font-size:.8rem;margin-right:6px;opacity:.7">→</span>':''}${b.text}
+    </div>`).join('')}
+  </div>`;
+}
+
+function buildColorBlocksVisual(){
+  return `<div class="color-blocks-grid">
+    <div class="block-mini bm-motion">👉 Avancer de 10 pas</div>
+    <div class="block-mini bm-looks">💬 Dire "Bravo !"</div>
+    <div class="block-mini bm-control">🔄 Répéter 10 fois</div>
+    <div class="block-mini bm-operator">🔢 3 + 4</div>
+  </div>`;
+}
+
+function buildSequenceVisual(){
+  return `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:0;margin-bottom:14px;padding:14px;background:rgba(0,0,0,.2);border-radius:9px;border:2px solid var(--chalk-faint)">
+    <div class="block-mini bm-hat">🚩 Quand drapeau cliqué</div>
+    <div class="sequence-arrow">↓</div>
+    <div class="block-mini bm-motion">👉 Avancer de 50 pas</div>
+    <div class="sequence-arrow">↓</div>
+    <div class="block-mini bm-looks">💬 Dire "Bonjour !"</div>
+    <div style="font-size:.9rem;color:var(--chalk-dim);margin-top:8px">🕐 L'ordre compte : chaque bloc attend que le précédent soit terminé</div>
+  </div>`;
+}
+
+function buildLoopTypesVisual(){
+  return `<div class="loop-types-grid">
+    <div class="loop-type-card">
+      <div class="block-mini bm-control" style="font-size:.9rem">🔄 Répéter <span style="background:rgba(0,0,0,.2);padding:1px 8px;border-radius:3px">N</span> fois</div>
+      <div class="loop-type-label">On connaît le nombre à l'avance</div>
+    </div>
+    <div class="loop-type-card" style="border-color:rgba(247,212,76,.4)">
+      <div class="block-mini bm-control" style="font-size:.9rem">♾️ Répéter indéfiniment</div>
+      <div class="loop-type-label">Ne s'arrête jamais seule</div>
+    </div>
+    <div class="loop-type-card">
+      <div class="block-mini bm-control" style="font-size:.9rem">⏸️ Répéter jusqu'à…</div>
+      <div class="loop-type-label">S'arrête quand condition = vraie</div>
+    </div>
+  </div>`;
+}
+
+function buildAnimatedVisual(q){
+  const blocks=(q.animBlocks||[]).map((b,i)=>{
+    const ml=b.indent2?'margin-left:38px':b.indent?'margin-left:19px':'';
+    return `<div class="block-mini ${b.cls} anim-block" id="ab-${i}" style="${ml}">${b.text}</div>`;
+  }).join('');
+  const extras=q.stageExtras||'';
+  return `<div class="anim-wrap">
+    <div class="anim-script">
+      <div class="anim-script-title">📋 Programme</div>
+      <div class="anim-blocks-list">${blocks}</div>
+    </div>
+    <div class="anim-stage-col">
+      <div class="anim-stage-title">🖥️ Scène</div>
+      <div class="mini-stage" id="anim-stage">
+        <div class="stage-sky"></div>
+        <div class="stage-ground"></div>
+        <div class="anim-sprite">🐱</div>
+        <div class="anim-bubble"></div>
+        ${extras}
+      </div>
+      <button class="anim-run-btn" id="anim-run-btn" onclick="startAnimation()">▶️ Lancer l'animation</button>
+    </div>
+  </div>`;
+}
+
+// ================================================
+// ANIMATION
+// ================================================
+function startAnimation(){
+  if(animRunning) return;
+  const q=QUESTIONS[currentQ];
+  if(!q.animate) return;
+  const stage=document.getElementById('anim-stage');
+  const btn=document.getElementById('anim-run-btn');
+  if(!stage) return;
+
+  // Reset
+  const sp=stage.querySelector('.anim-sprite');
+  if(sp) sp.style.left='10px';
+  const bub=stage.querySelector('.anim-bubble');
+  if(bub){bub.style.opacity='0';bub.textContent='';}
+  const bugEl=stage.querySelector('.anim-bug');
+  if(bugEl){bugEl.style.opacity='0';bugEl.style.display='none';}
+  const ctr=stage.querySelector('.anim-counter');
+  if(ctr) ctr.textContent='0';
+  const lv=stage.querySelector('.anim-lives');
+  if(lv) lv.textContent='❤️❤️❤️';
+  document.querySelectorAll('.anim-block').forEach(b=>b.classList.remove('active-anim'));
+
+  if(btn){btn.disabled=true;btn.textContent='⏳ Animation...';}
+  animRunning=true;
+
+  const bEls=[...document.querySelectorAll('.anim-block')];
+  q.animate(stage,bEls).then(()=>{
+    animRunning=false;
+    if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='▶️ Rejouer';}
+  }).catch(()=>{animRunning=false;});
+}
+
+// ================================================
+// ANSWER SELECTION
+// ================================================
+function selectAnswer(idx){
+  if(document.getElementById('q-options').querySelector('.disabled')) return;
+  const q=QUESTIONS[currentQ];
+  const isOk=(idx===q.correct);
+  scores.push(isOk);
+  studentAnswers.push(idx);
+
+  document.querySelectorAll('.option').forEach((el,i)=>{
+    el.classList.add('disabled');
+    if(i===q.correct) el.classList.add('correct');
+    else if(i===idx&&!isOk) el.classList.add('wrong');
+  });
+
+  const fb=document.getElementById('q-feedback');
+  fb.className='feedback show '+(isOk?'ok':'ko');
+  fb.innerHTML=isOk?`✅ Bonne réponse ! ${q.explanation}`:`❌ Pas tout à fait… ${q.explanation}`;
+
+  const live=scores.filter(Boolean).length;
+  document.getElementById('q-score-live').textContent=live+'/'+(currentQ+1)+' juste'+(currentQ+1>1?'s':'');
+
+  if(currentQ<TOTAL-1) document.getElementById('btn-next').style.display='inline-flex';
+  else document.getElementById('btn-finish').style.display='inline-flex';
+}
+
+function nextQuestion(){currentQ++;renderQuestion();}
+
+// ================================================
+// FINISH & RESULTS
+// ================================================
+async function finishQuiz(){
+  const correct=scores.filter(Boolean).length;
+  const note=Math.round(correct/TOTAL*20);
+
+  // Score circle
+  const pct=(note/20)*100;
+  document.getElementById('score-circle').style.background=
+    `conic-gradient(${getColor(note)} ${pct}%,rgba(0,0,0,.25) ${pct}%)`;
+  document.getElementById('score-circle').style.boxShadow=`0 0 40px ${getColorAlpha(note)}`;
+  document.getElementById('result-score').textContent=note;
+  document.getElementById('result-name-display').textContent=`Élève : ${studentName}`;
+
+  const {mention,emoji,msg}=getMention(note);
+  document.getElementById('result-mention').textContent=`${emoji} ${mention}`;
+  document.getElementById('result-msg').innerHTML=msg;
+
+  if(note>=14) spawnConfetti(document.getElementById('score-circle-wrap'));
+
+  // Correction
+  document.getElementById('review-list').innerHTML=QUESTIONS.map((q,i)=>{
+    const ok=studentAnswers[i]===q.correct;
+    return `<div class="review-item ${ok?'ok':'ko'}">
+      <div class="review-q">Q${i+1}. ${q.text.replace(/⚡ DÉFI EXPERT ! /,'')}</div>
+      <div class="review-ans">Réponse : <span class="${ok?'r-ok':'r-ko'}">${ok?'✅':'❌'} ${q.options[studentAnswers[i]]}</span>
+      ${!ok?`<br>Bonne réponse : <span class="r-ok">✅ ${q.options[q.correct]}</span>`:''}</div>
+      <div class="review-expl">💡 ${q.explanation}</div>
+    </div>`;
+  }).join('');
+
+  storeResult(note,correct);
+  showScreen('screen-results');
+}
+
+function getMention(n){
+  if(n>=18) return{mention:'Excellent !',emoji:'🏆',msg:'Maîtrise parfaite, même les défis experts ! Félicitations 🌟'};
+  if(n>=16) return{mention:'Très bien !',emoji:'⭐',msg:'Très bonne maîtrise du langage bloc. Bravo !'};
+  if(n>=14) return{mention:'Bien !',emoji:'👍',msg:"Bon travail ! Quelques notions à réviser, mais l'essentiel est acquis."};
+  if(n>=12) return{mention:'Assez bien',emoji:'🙂',msg:"Les bases sont là. Relis les parties sur les boucles et conditions."};
+  if(n>=10) return{mention:'Passable',emoji:'📖',msg:"Des lacunes à combler. Reprends l'artéfact de cours depuis le début !"};
+  return{mention:'À revoir',emoji:'💪',msg:"Le cours doit être retravaillé avec ton professeur. Courage !"};
+}
+function getColor(n){if(n>=16)return'var(--green-b)';if(n>=12)return'var(--yellow)';if(n>=8)return'var(--orange)';return'var(--red)';}
+function getColorAlpha(n){if(n>=16)return'rgba(74,222,128,.2)';if(n>=12)return'rgba(247,212,76,.2)';if(n>=8)return'rgba(251,146,60,.2)';return'rgba(248,113,113,.2)';}
+function getScoreClass(n){if(n>=16)return'score-excellent';if(n>=12)return'score-good';if(n>=8)return'score-average';return'score-low';}
+
+function resetQuiz(){document.getElementById('studentName').value='';showScreen('screen-welcome');}
+
+// ================================================
+// STORAGE
+// ================================================
+function storeResult(note,correct){
+  try{
+    const key='result:'+Date.now()+':'+studentName.replace(/\s+/g,'-');
+    const data={name:studentName,note,correct,total:TOTAL,date:new Date().toLocaleString('fr-FR'),answers:studentAnswers,scores};
+    localStorage.setItem(key,JSON.stringify(data));
+  }catch(e){console.warn('Storage:',e);}
+}
+
+// ================================================
+// DASHBOARD
+// ================================================
+function showDashboard(){showScreen('screen-dashboard-pwd');setTimeout(()=>document.getElementById('pwd-input').focus(),80);}
+function checkPwd(){
+  const v=document.getElementById('pwd-input').value;
+  if(v===DASHBOARD_PASSWORD){document.getElementById('pwd-error').textContent='';document.getElementById('pwd-input').value='';loadDashboard();showScreen('screen-dashboard');}
+  else{document.getElementById('pwd-error').textContent='❌ Mot de passe incorrect.';}
+}
+function loadDashboard(){
+  try{
+    const results=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith('result:')){try{results.push(JSON.parse(localStorage.getItem(k)));}catch(e){}}
+    }
+    results.sort((a,b)=>b.note-a.note);
+    renderDashboard(results);
+  }catch(e){renderDashboard([]);}
+}
+function renderDashboard(results){
+  const statsEl=document.getElementById('dash-stats');
+  if(!results.length){
+    statsEl.innerHTML='';
+    document.getElementById('dash-results-list').innerHTML=`<div class="empty-dash"><span style="font-size:3.5rem;display:block;margin-bottom:14px">📭</span>Aucun élève n'a encore soumis.<br><span style="font-size:.95rem">Les résultats apparaîtront ici dès qu'un élève terminera.</span></div>`;
+    document.getElementById('dash-questions-list').innerHTML='';
+    return;
+  }
+  const avg=(results.reduce((s,r)=>s+r.note,0)/results.length).toFixed(1);
+  const pass=results.filter(r=>r.note>=10).length;
+  statsEl.innerHTML=`
+    <div class="stat-box"><div class="stat-num">${results.length}</div><div class="stat-label">Élèves</div></div>
+    <div class="stat-box"><div class="stat-num">${avg}</div><div class="stat-label">Moyenne / 20</div></div>
+    <div class="stat-box"><div class="stat-num">${Math.max(...results.map(r=>r.note))}</div><div class="stat-label">Meilleure note</div></div>
+    <div class="stat-box"><div class="stat-num">${Math.min(...results.map(r=>r.note))}</div><div class="stat-label">Note la + basse</div></div>
+    <div class="stat-box"><div class="stat-num">${pass}/${results.length}</div><div class="stat-label">≥ 10 (admis)</div></div>`;
+
+  document.getElementById('dash-results-list').innerHTML=results.map((r,ri)=>`
+    <div class="result-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+        <div><span style="color:var(--chalk-dim);margin-right:8px">#${ri+1}</span><span class="result-name">${esc(r.name)}</span></div>
+        <div class="result-score-badge ${getScoreClass(r.note)}">${r.note} / 20</div>
+      </div>
+      <div style="font-size:.92rem;color:var(--chalk-dim);margin-bottom:8px">📅 ${r.date} · ${r.correct}/${r.total} correctes</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        ${(r.scores||[]).map((ok,qi)=>`<div class="ans-chip ${ok?'ok':'ko'}" title="Q${qi+1}">${ok?'✅':'❌'} Q${qi+1}</div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  // Per-question stats
+  document.getElementById('dash-questions-list').innerHTML=QUESTIONS.map((q,qi)=>{
+    const ok=results.filter(r=>r.scores&&r.scores[qi]).length;
+    const pct=Math.round(ok/results.length*100);
+    const cls=pct>=70?'score-excellent':pct>=50?'score-good':pct>=30?'score-average':'score-low';
+    const barColor=pct>=70?'var(--green-b)':pct>=50?'var(--blue)':pct>=30?'var(--yellow)':'var(--red)';
+    return `<div class="result-card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:9px">
+        <div style="font-family:'Caveat Brush',cursive;font-size:1.15rem">Q${qi+1}. ${esc(q.text.replace(/⚡ DÉFI EXPERT ! /,'').substring(0,55))}${q.text.length>55?'…':''}</div>
+        <div class="result-score-badge ${cls}">${ok}/${results.length} — ${pct}%</div>
+      </div>
+      <div style="height:9px;background:rgba(0,0,0,.3);border-radius:99px;overflow:hidden;border:1px solid var(--chalk-faint)">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:99px;transition:width .5s"></div>
+      </div>
+      <div style="margin-top:7px;font-size:.9rem;color:var(--chalk-dim)">✅ ${esc(q.options[q.correct])}</div>
+    </div>`;
+  }).join('');
+}
+function switchTab(name){
+  document.querySelectorAll('.dash-tab').forEach((t,i)=>t.classList.toggle('active',i===(name==='results'?0:1)));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+function clearAll(){
+  if(!confirm('⚠️ Effacer TOUS les résultats ? Action irréversible.')) return;
+  try{
+    const toDelete=[];
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('result:'))toDelete.push(k);}
+    toDelete.forEach(k=>localStorage.removeItem(k));
+    loadDashboard();
+  }catch(e){alert('Erreur.');}
+}
+function exportCSV(){
+  try{
+    const results=[];
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('result:')){try{results.push(JSON.parse(localStorage.getItem(k)));}catch(e){}}}
+    results.sort((a,b)=>b.note-a.note);
+    const hdr=['Nom','Note /20','Correctes','Date',...QUESTIONS.map((_,i)=>'Q'+(i+1))].join(';');
+    const rows=results.map(r=>[r.name,r.note,r.correct,r.date,...(r.scores||[]).map(s=>s?'1':'0')].join(';'));
+    const blob=new Blob(['\uFEFF'+[hdr,...rows].join('\n')],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='resultats_langage_bloc.csv';a.click();URL.revokeObjectURL(url);
+  }catch(e){alert('Erreur export.');}
+}
+
+// ================================================
+// UTILS
+// ================================================
+function spawnConfetti(parent){
+  const cols=['#f7d44c','#4ade80','#5bc8f5','#f472b6','#fb923c'];
+  for(let i=0;i<18;i++){
+    const c=document.createElement('div');c.className='cfetti-p';
+    c.style.cssText=`background:${cols[i%5]};left:${10+Math.random()*80}%;top:-10px;animation-delay:${Math.random()*.4}s;animation-duration:${.7+Math.random()*.5}s`;
+    parent.style.position='relative';parent.style.overflow='visible';
+    parent.appendChild(c);setTimeout(()=>c.remove(),1400);
+  }
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
